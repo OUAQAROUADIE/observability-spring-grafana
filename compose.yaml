@@ -19,3 +19,30 @@ services:
       ports:
          - "3200:3200" # Tempo
          - "9411:9411" # zipkin
+   my-loki:
+     image: grafana/loki:main
+     container_name: my-loki
+     command: [ "-config.file=/etc/loki/local-config.yaml" ]
+     ports:
+       - "3100:3100"
+   my-grafana:
+     image: grafana/grafana
+     container_name: my-grafana
+     restart: unless-stopped
+     ports:
+       - "3000:3000"
+     volumes:
+       - ./docker/grafana:/etc/grafana/provisioning/datasources:ro
+     environment:
+       - GF_SECURITY_ADMIN_USER=admin
+       - GF_SECURITY_ADMIN_PASSWORD=password
+   my-product-service:
+     build: ./
+     container_name: my-product-service
+     depends_on:
+       - my-tempo
+       - my-loki
+     restart: always
+     ports:
+       - "8081:8081"
+
